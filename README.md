@@ -5,6 +5,7 @@
 - 기본적으로 대화형 인터페이스
 - 에이전트가 스스로 다음 행동을 제안/진행할 수 있는 구조
 - 매 턴마다 **3개 이상 선택지**를 보여주고 사용자가 선택
+- **Windows / macOS / Linux**에서 실행 가능
 
 ## 구성 파일
 
@@ -13,6 +14,8 @@
 
 ## 빠른 시작
 
+### macOS / Linux
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate
@@ -20,6 +23,28 @@ pip install -r requirements.txt
 export ANTHROPIC_API_KEY="your_key"
 python agent.py
 ```
+
+### Windows (PowerShell)
+
+```powershell
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+$env:ANTHROPIC_API_KEY="your_key"
+py agent.py
+```
+
+### Windows (cmd)
+
+```bat
+py -m venv .venv
+.venv\Scripts\activate.bat
+pip install -r requirements.txt
+set ANTHROPIC_API_KEY=your_key
+py agent.py
+```
+
+> `ANTHROPIC_API_KEY`를 미리 설정하지 않아도 실행 시 콘솔에서 직접 입력할 수 있습니다.
 
 ## 동작 방식
 
