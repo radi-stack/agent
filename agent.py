@@ -1,3 +1,4 @@
+import getpass
 import json
 import os
 from dataclasses import dataclass, field
@@ -28,13 +29,24 @@ class AgentState:
 
 class ClaudeInteractiveAgent:
     def __init__(self, model: str = "claude-sonnet-4-20250514"):
-        api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+        api_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
         if not api_key:
-            raise ValueError("ANTHROPIC_API_KEY 환경변수가 필요합니다.")
+            api_key = getpass.getpass("ANTHROPIC_API_KEY를 입력하세요: ").strip()
+        if not api_key:
+            raise ValueError("ANTHROPIC_API_KEY가 비어 있습니다.")
 
         self.client = Anthropic(api_key=api_key)
         self.model = model
         self.state = AgentState()
+
+    @staticmethod
+    def _extract_json(text: str) -> dict:
+        text = text.strip()
+        if text.startswith("```"):
+            text = text.removeprefix("```json").removeprefix("```").strip()
+            if text.endswith("```"):
+                text = text[:-3].strip()
+        return json.loads(text)
 
     def _call_model(self, user_text: str) -> dict:
         self.state.history.append({"role": "user", "content": user_text})
@@ -48,7 +60,7 @@ class ClaudeInteractiveAgent:
         )
 
         text = "".join(block.text for block in response.content if block.type == "text").strip()
-        data = json.loads(text)
+        data = self._extract_json(text)
 
         options = data.get("options", [])
         if len(options) < 3:
