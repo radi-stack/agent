@@ -19,7 +19,7 @@
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-python -m pip install -r requirements.txt
+pip install -r requirements.txt
 export ANTHROPIC_API_KEY="your_key"
 python agent.py
 ```
@@ -29,7 +29,7 @@ python agent.py
 ```powershell
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
-py -m pip install -r requirements.txt
+
 $env:ANTHROPIC_API_KEY="your_key"
 py agent.py
 ```
@@ -39,33 +39,12 @@ py agent.py
 ```bat
 py -m venv .venv
 .venv\Scripts\activate.bat
-py -m pip install -r requirements.txt
+
 set ANTHROPIC_API_KEY=your_key
 py agent.py
 ```
 
 > `ANTHROPIC_API_KEY`를 미리 설정하지 않아도 실행 시 콘솔에서 직접 입력할 수 있습니다.
-
-## 트러블슈팅
-
-### `ModuleNotFoundError: No module named 'anthropic'`
-
-이 오류는 패키지가 설치되지 않았을 때 발생합니다. 아래 순서로 해결하세요.
-
-1. 가상환경 활성화
-2. `requirements.txt` 설치
-
-```bash
-python -m pip install -r requirements.txt
-```
-
-Windows에서는:
-
-```powershell
-py -m pip install -r requirements.txt
-```
-
-`agent.py`는 실행 시 `anthropic` 설치 여부를 먼저 점검하고, 누락되어 있으면 위 설치 명령을 안내한 뒤 종료합니다.
 
 ## 동작 방식
 
