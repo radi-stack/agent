@@ -15,7 +15,7 @@
 
 ## 빠른 시작
 
-> 기본값: `OPENAI_MODEL=gpt-5.2-codex`
+> 기본값: `OPENAI_MODEL=gpt-5.3-codex`
 
 ### macOS / Linux
 
@@ -52,7 +52,7 @@ py agent.py
 ## 환경 변수
 
 - `OPENAI_API_KEY` (필수): OpenAI API 키
-- `OPENAI_MODEL` (선택): 사용할 모델명 (기본값 `gpt-5.2-codex`)
+- `OPENAI_MODEL` (선택): 사용할 모델명 (기본값 `gpt-5.3-codex`)
 - `OPENAI_BASE_URL` (선택): 기본값 `https://api.openai.com/v1`
 
 ## 트러블슈팅
@@ -62,11 +62,12 @@ py agent.py
 1. `OPENAI_API_KEY`가 유효한지 확인
 2. `OPENAI_MODEL`이 현재 사용 가능한 모델인지 확인
 3. 조직/프로젝트 제한으로 모델 접근이 막혔는지 확인
+4. 최신 코드에서 `/responses` 스펙(`max_output_tokens`)을 사용하므로, 예전 코드라면 `git pull` 후 재실행
 
 ### 모델 응답 파싱 오류(JSONDecodeError)
 
 - 이 에이전트는 모델 응답이 JSON 형식(`assistant_reply`, `autonomous_next_steps`, `options`)을 따르기를 기대합니다.
-- 모델을 바꿨을 때 파싱 오류가 나면, `OPENAI_MODEL`을 기본값(`gpt-5.2-codex`)으로 먼저 되돌려 확인하세요.
+- 모델을 바꿨을 때 파싱 오류가 나면, `OPENAI_MODEL`을 기본값(`gpt-5.3-codex`)으로 먼저 되돌려 확인하세요.
 
 ## 동작 방식
 
