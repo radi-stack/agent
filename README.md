@@ -63,6 +63,18 @@ py agent.py
 2. `OPENROUTER_MODEL`이 현재 사용 가능한 모델인지 확인
 3. 무료 모델은 수시 변경될 수 있으니 `:free` 모델명으로 바꿔 재시도
 
+### `'latin-1' codec can't encode characters` 오류
+
+- 최신 코드에서는 OpenRouter 요청 헤더를 ASCII 안전값만 사용하도록 정리해 해당 오류를 피했습니다.
+- 먼저 최신 코드를 받은 뒤 다시 실행하세요:
+
+```bash
+git pull
+python -m py_compile agent.py
+```
+
+- 여전히 같은 오류가 나면, `OPENROUTER_BASE_URL`을 비워 기본값(`https://openrouter.ai/api/v1`)으로 다시 시도하세요.
+
 ## 동작 방식
 
 매 대화 턴에서 모델은 다음 JSON 형식으로 응답합니다.
