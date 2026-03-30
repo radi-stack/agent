@@ -37,7 +37,7 @@ class CodexInteractiveAgent:
             raise ValueError("OPENAI_API_KEY가 비어 있습니다.")
 
         self.api_key = api_key
-        self.model = model or os.environ.get("OPENAI_MODEL", "gpt-5.2-codex")
+        self.model = model or os.environ.get("OPENAI_MODEL", "gpt-5.3-codex")
         self.base_url = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
         self.state = AgentState()
 
@@ -74,7 +74,7 @@ class CodexInteractiveAgent:
             "model": self.model,
             "input": input_items,
             "temperature": 0.3,
-            "max_tokens": 1200,
+            "max_output_tokens": 1200,
         }
 
         req = urllib.request.Request(
