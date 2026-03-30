@@ -28,17 +28,17 @@ class AgentState:
     history: list[dict] = field(default_factory=list)
 
 
-class OpenRouterInteractiveAgent:
+class CodexInteractiveAgent:
     def __init__(self, model: str | None = None):
-        api_key = os.environ.get("OPENROUTER_API_KEY", "").strip()
+        api_key = os.environ.get("OPENAI_API_KEY", "").strip()
         if not api_key:
-            api_key = getpass.getpass("OPENROUTER_API_KEY를 입력하세요: ").strip()
+            api_key = getpass.getpass("OPENAI_API_KEY를 입력하세요: ").strip()
         if not api_key:
-            raise ValueError("OPENROUTER_API_KEY가 비어 있습니다.")
+            raise ValueError("OPENAI_API_KEY가 비어 있습니다.")
 
         self.api_key = api_key
-        self.model = model or os.environ.get("OPENROUTER_MODEL", "nvidia/nemotron-3-super-120b-a12b:free")
-        self.base_url = os.environ.get("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
+        self.model = model or os.environ.get("OPENAI_MODEL", "gpt-5.2-codex")
+        self.base_url = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
         self.state = AgentState()
 
     @staticmethod
@@ -50,20 +50,35 @@ class OpenRouterInteractiveAgent:
                 text = text[:-3].strip()
         return json.loads(text)
 
-    def _request_openrouter(self, user_text: str) -> dict:
-        messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-        messages.extend(self.state.history)
-        messages.append({"role": "user", "content": user_text})
+    @staticmethod
+    def _extract_text_from_response(response: dict) -> str:
+        text = response.get("output_text", "")
+        if text:
+            return text.strip()
+
+        chunks: list[str] = []
+        for item in response.get("output", []):
+            if item.get("type") != "message":
+                continue
+            for content in item.get("content", []):
+                if content.get("type") == "output_text":
+                    chunks.append(content.get("text", ""))
+        return "\n".join(chunks).strip()
+
+    def _request_openai(self, user_text: str) -> dict:
+        input_items = [{"role": "system", "content": SYSTEM_PROMPT}]
+        input_items.extend(self.state.history)
+        input_items.append({"role": "user", "content": user_text})
 
         payload = {
             "model": self.model,
-            "messages": messages,
+            "input": input_items,
             "temperature": 0.3,
             "max_tokens": 1200,
         }
 
         req = urllib.request.Request(
-            url=f"{self.base_url}/chat/completions",
+            url=f"{self.base_url}/responses",
             data=json.dumps(payload).encode("utf-8"),
             headers={
                 "Authorization": f"Bearer {self.api_key}",
@@ -77,20 +92,17 @@ class OpenRouterInteractiveAgent:
                 raw = response.read().decode("utf-8")
         except urllib.error.HTTPError as exc:
             body = exc.read().decode("utf-8", errors="ignore")
-            raise RuntimeError(f"OpenRouter HTTP 오류({exc.code}): {body}") from exc
+            raise RuntimeError(f"OpenAI HTTP 오류({exc.code}): {body}") from exc
         except urllib.error.URLError as exc:
-            raise RuntimeError(f"OpenRouter 연결 오류: {exc.reason}") from exc
+            raise RuntimeError(f"OpenAI 연결 오류: {exc.reason}") from exc
 
         return json.loads(raw)
 
     def _call_model(self, user_text: str) -> dict:
-        response = self._request_openrouter(user_text)
-        choices = response.get("choices", [])
-        if not choices:
-            raise RuntimeError("OpenRouter 응답에 choices가 없습니다.")
-
-        message = choices[0].get("message", {})
-        content = message.get("content", "").strip()
+        response = self._request_openai(user_text)
+        content = self._extract_text_from_response(response)
+        if not content:
+            raise RuntimeError("OpenAI 응답에서 텍스트를 찾지 못했습니다.")
         data = self._extract_json(content)
 
         options = data.get("options", [])
@@ -126,7 +138,7 @@ class OpenRouterInteractiveAgent:
             print(f"{i}. {title} | {detail}")
 
     def run(self):
-        print("OpenRouter 기반 대화형 자율 Agent를 시작합니다. (종료: exit)")
+        print("ChatGPT Codex 기반 대화형 자율 Agent를 시작합니다. (종료: exit)")
         print(f"사용 모델: {self.model}")
         print("입력 방법: 일반 텍스트로 요청을 쓰거나, 이전에 나온 선택지 번호(예: 1)를 입력하세요.")
         pending_options: list[dict] = []
@@ -164,7 +176,7 @@ class OpenRouterInteractiveAgent:
 
 if __name__ == "__main__":
     try:
-        agent = OpenRouterInteractiveAgent()
+        agent = CodexInteractiveAgent()
         agent.run()
     except KeyboardInterrupt:
         print("\n사용자 중단으로 종료합니다.")
