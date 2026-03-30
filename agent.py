@@ -68,8 +68,6 @@ class OpenRouterInteractiveAgent:
             headers={
                 "Authorization": f"Bearer {self.api_key}",
                 "Content-Type": "application/json",
-                "HTTP-Referer": "https://local-cli-agent",
-                "X-Title": "openrouter-cli-agent",
             },
             method="POST",
         )
@@ -130,6 +128,7 @@ class OpenRouterInteractiveAgent:
     def run(self):
         print("OpenRouter 기반 대화형 자율 Agent를 시작합니다. (종료: exit)")
         print(f"사용 모델: {self.model}")
+        print("입력 방법: 일반 텍스트로 요청을 쓰거나, 이전에 나온 선택지 번호(예: 1)를 입력하세요.")
         pending_options: list[dict] = []
 
         while True:
