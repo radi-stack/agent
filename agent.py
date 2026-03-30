@@ -1,10 +1,4 @@
 import getpass
-import json
-import os
-from dataclasses import dataclass, field
-
-from anthropic import Anthropic
-
 
 SYSTEM_PROMPT = """
 You are a conversational autonomous planning assistant.
@@ -29,6 +23,7 @@ class AgentState:
 
 class ClaudeInteractiveAgent:
     def __init__(self, model: str = "claude-sonnet-4-20250514"):
+
         api_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
         if not api_key:
             api_key = getpass.getpass("ANTHROPIC_API_KEY를 입력하세요: ").strip()
@@ -40,6 +35,7 @@ class ClaudeInteractiveAgent:
         self.state = AgentState()
 
     @staticmethod
+
     def _extract_json(text: str) -> dict:
         text = text.strip()
         if text.startswith("```"):
@@ -124,5 +120,4 @@ class ClaudeInteractiveAgent:
 
 
 if __name__ == "__main__":
-    agent = ClaudeInteractiveAgent()
-    agent.run()
+

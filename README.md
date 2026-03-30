@@ -29,7 +29,7 @@ python agent.py
 ```powershell
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
+
 $env:ANTHROPIC_API_KEY="your_key"
 py agent.py
 ```
@@ -39,7 +39,7 @@ py agent.py
 ```bat
 py -m venv .venv
 .venv\Scripts\activate.bat
-pip install -r requirements.txt
+
 set ANTHROPIC_API_KEY=your_key
 py agent.py
 ```
