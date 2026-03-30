@@ -1,9 +1,9 @@
 import getpass
+import importlib.util
 import json
 import os
+import sys
 from dataclasses import dataclass, field
-
-from anthropic import Anthropic
 
 
 SYSTEM_PROMPT = """
@@ -29,6 +29,12 @@ class AgentState:
 
 class ClaudeInteractiveAgent:
     def __init__(self, model: str = "claude-sonnet-4-20250514"):
+        self._ensure_dependency()
+
+        # NOTE: import is intentionally delayed so we can print a friendlier
+        # dependency message before import-time failure.
+        from anthropic import Anthropic
+
         api_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
         if not api_key:
             api_key = getpass.getpass("ANTHROPIC_API_KEY를 입력하세요: ").strip()
@@ -38,6 +44,21 @@ class ClaudeInteractiveAgent:
         self.client = Anthropic(api_key=api_key)
         self.model = model
         self.state = AgentState()
+
+    @staticmethod
+    def _ensure_dependency():
+        if importlib.util.find_spec("anthropic") is not None:
+            return
+
+        print("\n[오류] 'anthropic' 패키지를 찾을 수 없습니다.")
+        print("아래 명령으로 의존성을 먼저 설치해 주세요.\n")
+
+        if os.name == "nt":
+            print("  py -m pip install -r requirements.txt\n")
+        else:
+            print("  python -m pip install -r requirements.txt\n")
+
+        raise SystemExit(1)
 
     @staticmethod
     def _extract_json(text: str) -> dict:
@@ -124,5 +145,9 @@ class ClaudeInteractiveAgent:
 
 
 if __name__ == "__main__":
-    agent = ClaudeInteractiveAgent()
-    agent.run()
+    try:
+        agent = ClaudeInteractiveAgent()
+        agent.run()
+    except KeyboardInterrupt:
+        print("\n사용자 중단으로 종료합니다.")
+        sys.exit(0)
