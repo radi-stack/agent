@@ -1,10 +1,4 @@
 import getpass
-import json
-import os
-import sys
-import urllib.error
-import urllib.request
-from dataclasses import dataclass, field
 
 
 SYSTEM_PROMPT = """
@@ -28,20 +22,7 @@ class AgentState:
     history: list[dict] = field(default_factory=list)
 
 
-class OpenRouterInteractiveAgent:
-    def __init__(self, model: str | None = None):
-        api_key = os.environ.get("OPENROUTER_API_KEY", "").strip()
-        if not api_key:
-            api_key = getpass.getpass("OPENROUTER_API_KEY를 입력하세요: ").strip()
-        if not api_key:
-            raise ValueError("OPENROUTER_API_KEY가 비어 있습니다.")
 
-        self.api_key = api_key
-        self.model = model or os.environ.get("OPENROUTER_MODEL", "meta-llama/llama-3.3-8b-instruct:free")
-        self.base_url = os.environ.get("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
-        self.state = AgentState()
-
-    @staticmethod
     def _extract_json(text: str) -> dict:
         text = text.strip()
         if text.startswith("```"):
@@ -50,50 +31,7 @@ class OpenRouterInteractiveAgent:
                 text = text[:-3].strip()
         return json.loads(text)
 
-    def _request_openrouter(self, user_text: str) -> dict:
-        messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-        messages.extend(self.state.history)
-        messages.append({"role": "user", "content": user_text})
 
-        payload = {
-            "model": self.model,
-            "messages": messages,
-            "temperature": 0.3,
-            "max_tokens": 1200,
-        }
-
-        req = urllib.request.Request(
-            url=f"{self.base_url}/chat/completions",
-            data=json.dumps(payload).encode("utf-8"),
-            headers={
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json",
-                "HTTP-Referer": "https://local-cli-agent",
-                "X-Title": "openrouter-cli-agent",
-            },
-            method="POST",
-        )
-
-        try:
-            with urllib.request.urlopen(req, timeout=60) as response:
-                raw = response.read().decode("utf-8")
-        except urllib.error.HTTPError as exc:
-            body = exc.read().decode("utf-8", errors="ignore")
-            raise RuntimeError(f"OpenRouter HTTP 오류({exc.code}): {body}") from exc
-        except urllib.error.URLError as exc:
-            raise RuntimeError(f"OpenRouter 연결 오류: {exc.reason}") from exc
-
-        return json.loads(raw)
-
-    def _call_model(self, user_text: str) -> dict:
-        response = self._request_openrouter(user_text)
-        choices = response.get("choices", [])
-        if not choices:
-            raise RuntimeError("OpenRouter 응답에 choices가 없습니다.")
-
-        message = choices[0].get("message", {})
-        content = message.get("content", "").strip()
-        data = self._extract_json(content)
 
         options = data.get("options", [])
         if len(options) < 3:
@@ -108,7 +46,6 @@ class OpenRouterInteractiveAgent:
                 )
             data["options"] = options
 
-        self.state.history.append({"role": "user", "content": user_text})
         self.state.history.append({"role": "assistant", "content": json.dumps(data, ensure_ascii=False)})
         return data
 
@@ -128,8 +65,7 @@ class OpenRouterInteractiveAgent:
             print(f"{i}. {title} | {detail}")
 
     def run(self):
-        print("OpenRouter 기반 대화형 자율 Agent를 시작합니다. (종료: exit)")
-        print(f"사용 모델: {self.model}")
+
         pending_options: list[dict] = []
 
         while True:
@@ -153,20 +89,10 @@ class OpenRouterInteractiveAgent:
             else:
                 user_message = user_input
 
-            try:
-                data = self._call_model(user_message)
-            except Exception as exc:
-                print(f"\n[오류] 모델 호출 실패: {exc}")
-                continue
 
             self._print_turn(data)
             pending_options = data.get("options", [])
 
 
 if __name__ == "__main__":
-    try:
-        agent = OpenRouterInteractiveAgent()
-        agent.run()
-    except KeyboardInterrupt:
-        print("\n사용자 중단으로 종료합니다.")
-        sys.exit(0)
+
