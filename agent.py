@@ -39,6 +39,10 @@ class CodexInteractiveAgent:
         self.api_key = api_key
         self.model = model or os.environ.get("OPENAI_MODEL", "gpt-5.3-codex")
         self.base_url = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
+        self.mcp_server_url = os.environ.get("OPENAI_MCP_SERVER_URL", "").strip()
+        self.mcp_connector_id = os.environ.get("OPENAI_MCP_CONNECTOR_ID", "").strip()
+        self.mcp_server_label = os.environ.get("OPENAI_MCP_SERVER_LABEL", "remote-mcp").strip() or "remote-mcp"
+        self.mcp_require_approval = os.environ.get("OPENAI_MCP_REQUIRE_APPROVAL", "never").strip() or "never"
         self.state = AgentState()
 
     @staticmethod
@@ -76,6 +80,18 @@ class CodexInteractiveAgent:
             "temperature": 0.3,
             "max_output_tokens": 1200,
         }
+        if self.mcp_server_url or self.mcp_connector_id:
+            mcp_tool: dict[str, str] = {
+                "type": "mcp",
+                "server_label": self.mcp_server_label,
+                "require_approval": self.mcp_require_approval,
+            }
+            if self.mcp_server_url:
+                mcp_tool["server_url"] = self.mcp_server_url
+            else:
+                mcp_tool["connector_id"] = self.mcp_connector_id
+            payload["tools"] = [mcp_tool]
+            payload["tool_choice"] = "auto"
 
         req = urllib.request.Request(
             url=f"{self.base_url}/responses",
@@ -140,6 +156,8 @@ class CodexInteractiveAgent:
     def run(self):
         print("ChatGPT Codex 기반 대화형 자율 Agent를 시작합니다. (종료: exit)")
         print(f"사용 모델: {self.model}")
+        if self.mcp_server_url or self.mcp_connector_id:
+            print(f"MCP 사용: {self.mcp_server_label} (approval={self.mcp_require_approval})")
         print("입력 방법: 일반 텍스트로 요청을 쓰거나, 이전에 나온 선택지 번호(예: 1)를 입력하세요.")
         pending_options: list[dict] = []
 
