@@ -1,12 +1,12 @@
-# OpenRouter 기반 대화형 + 자율 진행 Agent (CLI)
+# ChatGPT Codex 기반 대화형 + 자율 진행 Agent (CLI)
 
-이 프로젝트는 **OpenRouter API**를 사용해 아래 요구사항을 만족하는 최소 동작 예시입니다.
+이 프로젝트는 **OpenAI API (ChatGPT Codex 모델)** 를 사용해 아래 요구사항을 만족하는 최소 동작 예시입니다.
 
 - 기본적으로 대화형 인터페이스
 - 에이전트가 스스로 다음 행동을 제안/진행할 수 있는 구조
 - 매 턴마다 **3개 이상 선택지**를 보여주고 사용자가 선택
 - **Windows / macOS / Linux**에서 실행 가능
-- 기본 모델을 **무료(`:free`) 모델**로 설정
+- 기본 모델을 **Codex 계열 모델**로 설정
 
 ## 구성 파일
 
@@ -15,7 +15,7 @@
 
 ## 빠른 시작
 
-> 기본값: `OPENROUTER_MODEL=nvidia/nemotron-3-super-120b-a12b:free`
+> 기본값: `OPENAI_MODEL=gpt-5.2-codex`
 
 ### macOS / Linux
 
@@ -23,7 +23,7 @@
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
-export OPENROUTER_API_KEY="your_key"
+export OPENAI_API_KEY="your_key"
 python agent.py
 ```
 
@@ -33,7 +33,7 @@ python agent.py
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
 py -m pip install -r requirements.txt
-$env:OPENROUTER_API_KEY="your_key"
+$env:OPENAI_API_KEY="your_key"
 py agent.py
 ```
 
@@ -43,37 +43,30 @@ py agent.py
 py -m venv .venv
 .venv\Scripts\activate.bat
 py -m pip install -r requirements.txt
-set OPENROUTER_API_KEY=your_key
+set OPENAI_API_KEY=your_key
 py agent.py
 ```
 
-> `OPENROUTER_API_KEY`를 미리 설정하지 않아도 실행 시 콘솔에서 직접 입력할 수 있습니다.
+> `OPENAI_API_KEY`를 미리 설정하지 않아도 실행 시 콘솔에서 직접 입력할 수 있습니다.
 
 ## 환경 변수
 
-- `OPENROUTER_API_KEY` (필수): OpenRouter API 키
-- `OPENROUTER_MODEL` (선택): 사용할 모델명 (`:free` 모델 권장)
-- `OPENROUTER_BASE_URL` (선택): 기본값 `https://openrouter.ai/api/v1`
+- `OPENAI_API_KEY` (필수): OpenAI API 키
+- `OPENAI_MODEL` (선택): 사용할 모델명 (기본값 `gpt-5.2-codex`)
+- `OPENAI_BASE_URL` (선택): 기본값 `https://api.openai.com/v1`
 
 ## 트러블슈팅
 
 ### API 호출 실패 / 인증 오류
 
-1. `OPENROUTER_API_KEY`가 유효한지 확인
-2. `OPENROUTER_MODEL`이 현재 사용 가능한 모델인지 확인
-3. 무료 모델은 수시 변경될 수 있으니 `:free` 모델명으로 바꿔 재시도
+1. `OPENAI_API_KEY`가 유효한지 확인
+2. `OPENAI_MODEL`이 현재 사용 가능한 모델인지 확인
+3. 조직/프로젝트 제한으로 모델 접근이 막혔는지 확인
 
-### `'latin-1' codec can't encode characters` 오류
+### 모델 응답 파싱 오류(JSONDecodeError)
 
-- 최신 코드에서는 OpenRouter 요청 헤더를 ASCII 안전값만 사용하도록 정리해 해당 오류를 피했습니다.
-- 먼저 최신 코드를 받은 뒤 다시 실행하세요:
-
-```bash
-git pull
-python -m py_compile agent.py
-```
-
-- 여전히 같은 오류가 나면, `OPENROUTER_BASE_URL`을 비워 기본값(`https://openrouter.ai/api/v1`)으로 다시 시도하세요.
+- 이 에이전트는 모델 응답이 JSON 형식(`assistant_reply`, `autonomous_next_steps`, `options`)을 따르기를 기대합니다.
+- 모델을 바꿨을 때 파싱 오류가 나면, `OPENAI_MODEL`을 기본값(`gpt-5.2-codex`)으로 먼저 되돌려 확인하세요.
 
 ## 동작 방식
 
